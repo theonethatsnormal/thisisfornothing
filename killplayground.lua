@@ -1,91 +1,27 @@
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = game:WaitForChild("CoreGui")
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local colors = {
+    SchemeColor = Color3.fromRGB(0, 180, 0),   
+    Background = Color3.fromRGB(20, 20, 20),    
+    Header = Color3.fromRGB(30, 30, 30),        
+    TextColor = Color3.fromRGB(255, 255, 255),   
+    ElementColor = Color3.fromRGB(20, 40, 20)   
+}
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 200)  
-frame.Position = UDim2.new(0.5, -150, 0.5, -75)
-frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-frame.Parent = screenGui
 
-local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0, 12)
-frameCorner.Parent = frame
 
-local dragging = false
-local dragInput, dragStart, startPos
+local Window = Library.CreateLib("Bloody Playground by ohavelka1", colors)
+local KillTab = Window:NewTab("Kill")
+local KillSection = KillTab:NewSection("Kill")
+local playertokill = nil
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
-local function updateDrag(input)
-    local delta = input.Position - dragStart
-    frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
+local espGUIs = {}
+local espToggleState = false
 
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
-end)
 
-frame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if dragging then
-        updateDrag(input)
-    end
-end)
 
-local textBox = Instance.new("TextBox")
-textBox.Size = UDim2.new(0, 250, 0, 40)
-textBox.Position = UDim2.new(0.5, -125, 0.2, 0)
-textBox.PlaceholderText = "Enter target player's name"
-textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-textBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-textBox.Parent = frame
-
-local textBoxCorner = Instance.new("UICorner")
-textBoxCorner.CornerRadius = UDim.new(0, 12)
-textBoxCorner.Parent = textBox
-
-local teleportButton = Instance.new("TextButton")
-teleportButton.Size = UDim2.new(0, 200, 0, 40)
-teleportButton.Position = UDim2.new(0.5, -100, 0.6, 0)
-teleportButton.Text = "Kill that guy!"
-teleportButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-teleportButton.Parent = frame
-
-local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 12)
-buttonCorner.Parent = teleportButton
-
-local killallButton = Instance.new("TextButton")
-killallButton.Size = UDim2.new(0, 200, 0, 40)
-killallButton.Position = UDim2.new(0.5, -100, 0.8, 0)
-killallButton.Text = "Kill All!"
-killallButton.BackgroundColor3 = Color3.fromRGB(255,0,0)
-killallButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-killallButton.Parent = frame
-
-local killallButtonCorner = Instance.new("UICorner")
-killallButtonCorner.CornerRadius = UDim.new(0, 12)
-killallButtonCorner.Parent = killallButton
-
-local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 30, 0, 30)
-closeButton.Position = UDim2.new(1, -40, 0, 10)
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-closeButton.Parent = frame
-
-local closeButtonCorner = Instance.new("UICorner")
-closeButtonCorner.CornerRadius = UDim.new(0, 6)
-closeButtonCorner.Parent = closeButton
 
 local function killPlayer(targetPlayerName)
 local player = game.Players.LocalPlayer
@@ -192,30 +128,159 @@ local function killAllPlayers()
 end
 
 
-killallButton.MouseButton1Click:Connect(function()
+KillSection:NewTextBox("Type Player to Kill", "Press enter when typing the name of the player", function(txt)
+	print(txt)
+    playertokill = txt
+end)
+
+KillSection:NewButton("Kill Player", "Kills the player duh.", function()
+    killPlayer(playertokill)
+end)
+
+KillSection:NewLabel("Kill All Players!")
+
+KillSection:NewButton("Kill All!", "Kills all!, not 100%. still in development", function()
     killAllPlayers()
 end)
 
+KillSection:NewLabel("Click Kill Tool")
+KillSection:NewButton("Click Kill Tool", "kills the player you click on. thats it...", function()
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local mouse = localPlayer:GetMouse()
 
-teleportButton.MouseButton1Click:Connect(function()
-    local targetPlayerName = textBox.Text
-    if targetPlayerName and targetPlayerName ~= "" then
-        killPlayer(targetPlayerName)
+local tool = Instance.new("Tool")
+tool.Name = "ClickKill"
+tool.RequiresHandle = false
+tool.Parent = localPlayer:WaitForChild("Backpack")
+
+local function onMouseClick()
+    local target = mouse.Target
+    if target then
+        local character = target:FindFirstAncestorOfClass("Model")
+        if character then
+            local clickedPlayer = Players:GetPlayerFromCharacter(character)
+            if clickedPlayer then
+                killPlayer(clickedPlayer.Name)
+            end
+        end
+    end
+end
+
+local clickConnection
+
+tool.Equipped:Connect(function()
+    clickConnection = mouse.Button1Down:Connect(onMouseClick)
+end)
+
+tool.Unequipped:Connect(function()
+    if clickConnection then
+        clickConnection:Disconnect()
+        clickConnection = nil
+    end
+end)
+
+end)
+
+local BoxTab = Window:NewTab("ESP-Hitbox")
+local BoxSection = BoxTab:NewSection("ESP-Hitbox")
+
+local headResizingEnabled = false
+
+
+local function createESP(player)
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        if not character:FindFirstChild("ESP") then
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "ESP"
+            billboard.Size = UDim2.new(8, 0, 10, 0)
+            billboard.AlwaysOnTop = true
+            billboard.Adornee = character.HumanoidRootPart
+            billboard.Parent = character
+
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(0.5, 0, 0.6, 0)
+            frame.BackgroundTransparency = 0.7
+            frame.BackgroundColor3 = Color3.new(1, 0, 0)
+            frame.BorderColor3 = Color3.new(0, 0, 0)
+            frame.Position = UDim2.new(0.255, 0, 0.22, 0)
+            frame.Parent = billboard
+
+            local nameLabel = Instance.new("TextLabel")
+            nameLabel.Size = UDim2.new(3, 0, 0.6, 0)
+            nameLabel.Position = UDim2.new(-1, 0, 0, 0)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = player.Name
+            nameLabel.TextColor3 = Color3.new(1, 1, 1)
+            nameLabel.TextStrokeTransparency = 0
+            nameLabel.TextScaled = true
+            nameLabel.Font = Enum.Font.SourceSansBold
+            nameLabel.Parent = billboard
+
+            espGUIs[player.Name] = { billboard = billboard, frame = frame, nameLabel = nameLabel }
+        end
+    end
+end
+
+BoxSection:NewToggle("ESP Toggle - Doesnt Respawn", "Toggle ESP visibility", function(state)
+    espToggleState = state
+
+    if espToggleState == true then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer and not espGUIs[player.Name] then
+                createESP(player)
+            end
+        end
+
+        while true do
+            wait(3)
+            if espToggleState == true then
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= Players.LocalPlayer and not espGUIs[player.Name] then
+                    createESP(player)
+                end
+            end
+        end
+        end
     else
-        print("Please enter a valid player name!")
+        for _, player in pairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character and character:FindFirstChild("ESP") then
+                character.ESP:Destroy()
+            end
+        end
+        espGUIs = {}
     end
 end)
 
 
-
-
-
-
-
-
-
-
-
-closeButton.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
+BoxSection:NewToggle("Toggle Head Resize", "Enable or Disable head resizing", function(state)
+    headResizingEnabled = state
+    print(state and "Head resizing enabled" or "Head resizing disabled")
 end)
+
+game:GetService("RunService").Heartbeat:Connect(function()
+    if headResizingEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("Head") and player ~= Players.LocalPlayer then
+                local head = player.Character.Head
+                head.Size = Vector3.new(5, 5, 5)
+                head.CanCollide = false
+                --head.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 2.5, 0)
+            end
+        end
+    end
+end)
+
+local OtherTab = Window:NewTab("Other")
+local OtherSection = OtherTab:NewSection("Other Stuff")
+
+OtherSection:NewButton("Infinity Yield", "Infinity Yield", function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end)
+
+OtherSection:NewButton("Invisibility", "Invisibility", function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Invisible-script-20557"))()
+end)
+
