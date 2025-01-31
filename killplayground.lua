@@ -1,10 +1,12 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+
+
 local colors = {
-    SchemeColor = Color3.fromRGB(0, 180, 0),   
-    Background = Color3.fromRGB(20, 20, 20),    
-    Header = Color3.fromRGB(30, 30, 30),        
-    TextColor = Color3.fromRGB(255, 255, 255),   
-    ElementColor = Color3.fromRGB(20, 40, 20)   
+    SchemeColor = Color3.fromRGB(0, 180, 0),    -- Less vibrant, muted green
+    Background = Color3.fromRGB(20, 20, 20),     -- Dark background
+    Header = Color3.fromRGB(30, 30, 30),         -- Slightly lighter dark gray for the header
+    TextColor = Color3.fromRGB(255, 255, 255),   -- White text for readability
+    ElementColor = Color3.fromRGB(20, 40, 20)    -- Dark muted green for elements
 }
 
 
@@ -20,7 +22,21 @@ local espGUIs = {}
 local espToggleState = false
 
 
+local function HealPart()
+    local part = workspace.Map.Tower.Traps.Buttons:FindFirstChild("Heal100Brick")
+    local character = game.Players.LocalPlayer and game.Players.LocalPlayer.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
 
+    if part and hrp then
+        local originalCFrame = hrp.CFrame
+        task.wait(0)
+        hrp.CFrame = part.CFrame * CFrame.new(5, 0, 0) 
+        task.wait(0.1)
+        hrp.CFrame = part.CFrame 
+        task.wait(0)
+        hrp.CFrame = originalCFrame 
+    end
+end
 
 
 local function killPlayer(targetPlayerName)
@@ -127,6 +143,22 @@ local function killAllPlayers()
     end
 end
 
+local function HealPart()
+    local part = workspace.Map.Tower.Traps.Buttons:FindFirstChild("Heal100Brick")
+    local character = game.Players.LocalPlayer and game.Players.LocalPlayer.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+    if part and hrp then
+        local originalCFrame = hrp.CFrame
+        task.wait(0)
+        hrp.CFrame = part.CFrame * CFrame.new(5, 0, 0)
+        task.wait(0.1)
+        hrp.CFrame = part.CFrame 
+        task.wait(0)
+        hrp.CFrame = originalCFrame
+    end
+end
+
 
 KillSection:NewTextBox("Type Player to Kill", "Press enter when typing the name of the player", function(txt)
 	print(txt)
@@ -182,10 +214,29 @@ end)
 
 end)
 
+local CharTab = Window:NewTab("Character")
+local CharSection = CharTab:NewSection("Character")
+
+local autoHealEnabled = false
+
+CharSection:NewToggle("AutoHeal", "automatically heals player if below 90 hp", function(state)
+    autoHealEnabled = state
+    while autoHealEnabled do
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            if game.Players.LocalPlayer.Character.Humanoid.Health <= 90 then
+                HealPart()
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+
 local BoxTab = Window:NewTab("ESP-Hitbox")
 local BoxSection = BoxTab:NewSection("ESP-Hitbox")
 
 local headResizingEnabled = false
+
 
 
 local function createESP(player)
