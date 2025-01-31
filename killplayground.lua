@@ -22,21 +22,7 @@ local espGUIs = {}
 local espToggleState = false
 
 
-local function HealPart()
-    local part = workspace.Map.Tower.Traps.Buttons:FindFirstChild("Heal100Brick")
-    local character = game.Players.LocalPlayer and game.Players.LocalPlayer.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
 
-    if part and hrp then
-        local originalCFrame = hrp.CFrame
-        task.wait(0)
-        hrp.CFrame = part.CFrame * CFrame.new(5, 0, 0) 
-        task.wait(0.1)
-        hrp.CFrame = part.CFrame 
-        task.wait(0)
-        hrp.CFrame = originalCFrame 
-    end
-end
 
 
 local function killPlayer(targetPlayerName)
@@ -131,6 +117,7 @@ local function killAllPlayers()
         end
     end
 
+
     local argsReload = {
         [1] = game:GetService("Players").LocalPlayer.Character.Deagle
     }
@@ -150,14 +137,83 @@ local function HealPart()
 
     if part and hrp then
         local originalCFrame = hrp.CFrame
+        local camPart = Instance.new("Part", workspace)
+        camPart.Size = Vector3.new(1, 1, 1)
+        camPart.Position = game.Players.LocalPlayer.Character.Head.Position
+        camPart.Anchored = true
+        camPart.Transparency = 1
+        local cam = workspace.CurrentCamera
+        cam.CameraType = Enum.CameraType.Scriptable
+        cam.CFrame = CFrame.new(camPart.Position, game.Players.LocalPlayer.Character.Head.Position)
         task.wait(0)
         hrp.CFrame = part.CFrame * CFrame.new(5, 0, 0)
-        task.wait(0.1)
-        hrp.CFrame = part.CFrame 
+        task.wait(0.12)
+        hrp.CFrame = part.CFrame
         task.wait(0)
         hrp.CFrame = originalCFrame
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom camPart:Destroy()
     end
 end
+
+local function removebodyparts()
+    local player = game.Players.LocalPlayer
+    if not player or not player.Character then return end
+
+    local char = player.Character
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local breakJoints = workspace.Map.Tower.Traps.Buttons:FindFirstChild("BreakJoints")
+    local originalCFrame = root.CFrame
+
+    if root and breakJoints then
+        root.CFrame = CFrame.new(757, 2389, 256)
+        breakJoints.Size = Vector3.new(0.5, 0.5, 0.5)
+        task.wait(0.5)
+        root.CFrame = CFrame.new(757, 2389, 252)
+        local bodyParts = {"Left Arm", "Right Arm", "Left Leg", "Right Leg"}
+        for _, partName in ipairs(bodyParts) do
+            local part = char:FindFirstChild(partName)
+            if part then
+                breakJoints.CFrame = part.CFrame
+                task.wait(0.2)
+            end
+        end
+        breakJoints.CFrame = CFrame.new(757, 2386, 248)
+        breakJoints.Size = Vector3.new(4, 1, 4)
+        root.CFrame = originalCFrame
+    end
+end
+local function teleportAndUse(currentOption)
+    local player = game.Players.LocalPlayer
+    if not player or not player.Character then return end
+
+    local char = player.Character
+    local root = char:FindFirstChild("HumanoidRootPart")
+
+    local locations = {
+        Knife = workspace.Map["Weapon Tables"].Knife,
+        Deagle = workspace.Map["Weapon Tables"].Deagle,
+        AK47 = workspace.Map["Weapon Tables"].AK47
+    }
+
+    local target = locations[currentOption]
+
+    if root and target then
+        local originalCFrame = root.CFrame
+        root.CFrame = target.CFrame + Vector3.new(0,0,5)
+        local prompt = target:FindFirstChild("ProximityPrompt")
+        task.wait(0.2)
+        if prompt then
+            fireproximityprompt(prompt)
+        end
+        task.wait(0)
+        root.CFrame = originalCFrame
+    end
+end
+
+
+
+
+
 
 
 KillSection:NewTextBox("Type Player to Kill", "Press enter when typing the name of the player", function(txt)
@@ -219,7 +275,7 @@ local CharSection = CharTab:NewSection("Character")
 
 local autoHealEnabled = false
 
-CharSection:NewToggle("AutoHeal", "automatically heals player if below 90 hp", function(state)
+CharSection:NewToggle("Auto Heal", "automatically heals player if below 90 hp", function(state)
     autoHealEnabled = state
     while autoHealEnabled do
         if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
@@ -229,6 +285,23 @@ CharSection:NewToggle("AutoHeal", "automatically heals player if below 90 hp", f
         end
         task.wait(0.1)
     end
+end)
+
+CharSection:NewButton("Remove Body Parts", "removes your arms and legs... youre disabled after pressing", function()
+    removebodyparts()
+end)
+
+
+local ItemTab = Window:NewTab("Items")
+local ItemSection = ItemTab:NewSection("Items")
+local optiontogive = nil
+
+ItemSection:NewDropdown("Choose a Weapon", "idk bro i am tired i am editing tis at 23:00", {"Deagle", "Knife", "AK47"}, function(currentOption)
+    optiontogive = currentOption
+end)
+
+ItemSection:NewButton("Give Weapon", "gives you the weapon you clicked on in the list", function()
+    teleportAndUse(optiontogive)
 end)
 
 
