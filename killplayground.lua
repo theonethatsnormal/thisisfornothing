@@ -516,7 +516,7 @@ local function getClosestPlayer()
             local targetCharacter = player.Character
             if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
                 local humanoid = targetCharacter:FindFirstChild("Humanoid")
-                if humanoid and humanoid.Health >= 20 then
+                if humanoid and humanoid.Health >= 0 then
                     local distance = (targetCharacter.HumanoidRootPart.Position - hrp2.Position).Magnitude
                     if distance < closestDistance then
                         closestDistance = distance
