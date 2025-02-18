@@ -134,7 +134,25 @@ local function HealPart()
     local part = workspace.Map.Tower.Traps.Buttons:FindFirstChild("Heal100Brick")
     local character = game.Players.LocalPlayer and game.Players.LocalPlayer.Character
     local hrp = character and character:FindFirstChild("HumanoidRootPart")
-
+    local disparts = {
+        workspace.Map.Tower.Traps.Buttons.Hurt35Brick,
+        workspace.Map.Tower.Traps.Buttons.Heal50Brick,
+        workspace.Map.Tower.Traps.Buttons.Heal5Brick,
+        workspace.Map.Tower.Traps.Buttons.Hurt100Brick,
+        workspace.Map.Tower.Traps.Buttons.Hurt15Brick,
+    }
+    
+    for _, part in ipairs(disparts) do
+        if part then
+            part.CanCollide = false
+            part.CanQuery = false
+            part.CanTouch = false
+        end
+    end
+    local healpart = workspace.Map.Tower.Traps.Buttons.Heal100Brick
+    healpart.CanCollide = false
+    healpart.Transparency = 1
+    healpart.Size = Vector3.new(5,5,5)
     if part and hrp then
         local originalCFrame = hrp.CFrame
         local camPart = Instance.new("Part", workspace)
@@ -146,7 +164,7 @@ local function HealPart()
         cam.CameraType = Enum.CameraType.Scriptable
         cam.CFrame = CFrame.new(camPart.Position, game.Players.LocalPlayer.Character.Head.Position)
         task.wait(0)
-        hrp.CFrame = part.CFrame * CFrame.new(5, 0, 0)
+        hrp.CFrame = part.CFrame * CFrame.new(5.5, 0, 0)
         task.wait(0.12)
         hrp.CFrame = part.CFrame
         task.wait(0)
@@ -290,6 +308,75 @@ end)
 CharSection:NewButton("Remove Body Parts", "removes your arms and legs... youre disabled after pressing", function()
     removebodyparts()
 end)
+local infslidetoggled = false
+local hasbeentoggleinfslide = false
+
+CharSection:NewToggle("Toggle inf slide keybind", "just a keybind check the function itself for info!", function(state)
+    if state then
+        infslidetoggled = true
+    else
+        infslidetoggled = false
+    end
+end)
+
+CharSection:NewKeybind("Infinity slide!", "makes you slide infinitly", Enum.KeyCode.F, function()
+	if infslidetoggled == true then
+    if hasbeentoggleinfslide == false then
+        print("shoud be enabled")
+        hasbeentoggleinfslide = true
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        local camera = workspace.CurrentCamera
+        local animScript = character:FindFirstChild("Animate")
+        if animScript then
+        	animScript.Disabled = true
+        end
+        humanoid.Sit = true
+        task.wait(0.1)
+        hrp.CFrame = hrp.CFrame * CFrame.Angles(math.rad(90), 0, 0)
+        local bodyVel = Instance.new("BodyVelocity")
+        bodyVel.Parent = hrp
+        bodyVel.MaxForce = Vector3.new(5000, 10, 5000)
+        local bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.Parent = hrp
+        bodyGyro.MaxTorque = Vector3.new(5000, 5000, 5000)
+        bodyGyro.D = 300  
+        bodyGyro.P = 3000 
+        local RunService = game:GetService("RunService")
+        local heartbeatConn
+        heartbeatConn = RunService.RenderStepped:Connect(function()
+	        if not humanoid.Sit then
+		        bodyVel:Destroy()
+		        bodyGyro:Destroy()
+		        if animScript then
+			        animScript.Disabled = false
+		        end
+		        heartbeatConn:Disconnect()
+                hasbeentoggleinfslide = false
+                print("shoud be disabled")
+
+		        return
+	        end
+
+        	local camLook = camera.CFrame.LookVector
+	        local flatLookVector = Vector3.new(camLook.X, 0, camLook.Z).Unit
+	        bodyGyro.CFrame = CFrame.new(hrp.Position, hrp.Position + flatLookVector) * CFrame.Angles(math.rad(90), 0, 0)
+	        local adjustedForward = Vector3.new(-hrp.CFrame.UpVector.X, 0, -hrp.CFrame.UpVector.Z).Unit
+	        bodyVel.Velocity = adjustedForward * 50
+        end)
+    end
+    end
+end)
+
+CharSection:NewSlider("Gravity slider", "changes gravity when you move the slider", 300, 0, function(g) 
+    game.workspace.Gravity = g
+end)
+CharSection:NewButton("original Gravity", "set original gravity ", function()
+    game.workspace.Gravity = 196.2
+end)
+
 
 
 local ItemTab = Window:NewTab("Items")
@@ -396,6 +483,91 @@ game:GetService("RunService").Heartbeat:Connect(function()
         end
     end
 end)
+
+local BotTab = Window:NewTab("Bot")
+local BotSection = BotTab:NewSection("Bot")
+
+local Players2 = game:GetService("Players")
+local localPlayer2 = Players2.LocalPlayer
+local character2 = localPlayer2.Character or localPlayer2.CharacterAdded:Wait()
+local hrp2 = character2:WaitForChild("HumanoidRootPart")
+local debugMode = false
+local enabled = false
+local hasFired = false
+
+local function downplayer(targetPlayer)
+	for i = 1, 20 do
+        local args = {
+            [1] = game:GetService("Players").LocalPlayer.Character:WaitForChild("Combat"),
+            [2] = "Hit",
+            [3] = game:GetService("Players"):WaitForChild(targetPlayer.Name).Character:FindFirstChild("Head")
+        }
+        
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Swing"):FireServer(unpack(args))
+        --task.wait(0)
+        end
+end
+
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local closestDistance = math.huge
+    for _, player in ipairs(Players2:GetPlayers()) do
+        if player ~= localPlayer2 then
+            local targetCharacter = player.Character
+            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                local humanoid = targetCharacter:FindFirstChild("Humanoid")
+                if humanoid and humanoid.Health >= 20 then
+                    local distance = (targetCharacter.HumanoidRootPart.Position - hrp2.Position).Magnitude
+                    if distance < closestDistance then
+                        closestDistance = distance
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return closestPlayer, closestDistance
+end
+
+
+local function huntLoop()
+	while true do
+		if enabled then
+			local targetPlayer, distance = getClosestPlayer()
+			if targetPlayer then
+				local targetCharacter = targetPlayer.Character
+				if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+					local targetPosition = targetCharacter.HumanoidRootPart.Position
+					if distance > 5 then
+						local direction = (targetPosition - hrp2.Position).Unit
+						local newPosition = hrp2.Position + direction * 1
+						hrp2.CFrame = CFrame.new(newPosition)
+					else
+							downplayer(targetPlayer)
+                            print("fired")
+                            task.wait(0.5)
+							if debugMode then enabled = false end
+					end
+				end
+			end
+		end
+		task.wait(0)
+	end
+end
+
+task.spawn(huntLoop)
+
+BotSection:NewToggle("HuntBot", "hunts down players", function(state)
+    if state then
+        enabled = true
+        hasFired = false
+    else
+        enabled = false
+    end
+end)
+
+
+
 
 local OtherTab = Window:NewTab("Other")
 local OtherSection = OtherTab:NewSection("Other Stuff")
