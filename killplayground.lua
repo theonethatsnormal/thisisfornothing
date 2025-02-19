@@ -228,6 +228,36 @@ local function teleportAndUse(currentOption)
     end
 end
 
+local running = false  
+
+function ToggleLoop(state)
+    running = state
+    if running then
+        while running do
+            local A_1 = {
+                "Right Shoulder", 
+                "Left Shoulder", 
+                "Neck"
+            }
+
+            local A_2 = {
+                ["Left Shoulder"] = CFrame.new(-1, 0.5, 0, -1.1920929e-07, -0, -1, 0, 1, -0, 1, 0, -1.1920929e-07), 
+                ["Right Shoulder"] = CFrame.new(1, 0.5, 0, -1.1920929e-07, 0, 1, 0, 1, 0, -1, 0, -1.1920929e-07), 
+                ["Neck"] = CFrame.new(0, -100, 0, -1, 0.000413552742, -9.84977523e-05, -2.91038305e-11, 0.231693447, 0.97278893, 0.000425120787, 0.972788811, -0.231693566)
+            }
+
+            local Event = game:GetService("ReplicatedStorage").Remotes.LookAt
+            Event:FireServer(A_1, A_2)
+            task.wait(0)
+        end
+    else
+        task.wait(0)
+    end
+end
+
+
+
+
 
 
 
@@ -303,6 +333,11 @@ CharSection:NewToggle("Auto Heal", "automatically heals player if below 90 hp", 
         end
         task.wait(0.1)
     end
+end)
+
+
+CharSection:NewToggle("Remove Head", "removes your head (it will still exist somewhere tho)", function(state)
+    ToggleLoop(state)
 end)
 
 CharSection:NewButton("Remove Body Parts", "removes your arms and legs... youre disabled after pressing", function()
@@ -511,60 +546,140 @@ end
 local function getClosestPlayer()
     local closestPlayer = nil
     local closestDistance = math.huge
+
     for _, player in ipairs(Players2:GetPlayers()) do
         if player ~= localPlayer2 then
-            local targetCharacter = player.Character
-            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                local humanoid = targetCharacter:FindFirstChild("Humanoid")
-                if humanoid and humanoid.Health >= 0 then
-                    local distance = (targetCharacter.HumanoidRootPart.Position - hrp2.Position).Magnitude
-                    if distance < closestDistance then
-                        closestDistance = distance
-                        closestPlayer = player
+            local success, err = pcall(function()
+                -- Update the player's character reference
+                local targetCharacter = player.Character
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    local humanoid = targetCharacter:FindFirstChild("Humanoid")
+                    if humanoid and humanoid.Health >= 1 then
+                        local distance = (targetCharacter.HumanoidRootPart.Position - hrp2.Position).Magnitude
+                        if distance < closestDistance then
+                            closestDistance = distance
+                            closestPlayer = player
+                        end
                     end
                 end
+            end)
+
+            if not success then
+                warn("Error in getClosestPlayer for player " .. player.Name .. ": " .. err)
             end
         end
     end
+
     return closestPlayer, closestDistance
 end
 
+local huntBotRunning = false 
+local enabled = false  
 
-local function huntLoop()
-	while true do
-		if enabled then
-			local targetPlayer, distance = getClosestPlayer()
-			if targetPlayer then
-				local targetCharacter = targetPlayer.Character
-				if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-					local targetPosition = targetCharacter.HumanoidRootPart.Position
-					if distance > 5 then
-						local direction = (targetPosition - hrp2.Position).Unit
-						local newPosition = hrp2.Position + direction * 1
-						hrp2.CFrame = CFrame.new(newPosition)
-					else
-							downplayer(targetPlayer)
-                            print("fired")
-                            task.wait(0.5)
-							if debugMode then enabled = false end
-					end
-				end
-			end
-		end
-		task.wait(0)
-	end
+local velfloat = nil  
+
+local function float(state)
+    if state then
+        if not velfloat then  
+            velfloat = Instance.new("BodyVelocity")
+            velfloat.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            velfloat.Velocity = Vector3.new(0, 0, 0)
+            velfloat.Parent = localPlayer2.Character:FindFirstChild("HumanoidRootPart")  
+        end
+    else
+        if velfloat then
+            velfloat:Destroy()  
+            velfloat = nil
+        end
+    end
 end
 
-task.spawn(huntLoop)
+local collisionsDisabled = nil
+
+local function toggleCollisions(state)
+    local character = localPlayer2.Character or localPlayer2.CharacterAdded:Wait()
+    local bodyParts = {
+        "Head",
+        "HumanoidRootPart",
+        "Torso",
+        "LeftLeg",
+        "RightLeg",
+        "LeftArm",
+        "RightArm"
+    }
+
+    if state then
+        if not collisionsDisabled then
+            for _, partName in ipairs(bodyParts) do
+                local part = character:FindFirstChild(partName)
+                if part then
+                    part.CanCollide = false  
+                end
+            end
+            collisionsDisabled = true
+        end
+    else
+        if collisionsDisabled then
+            for _, partName in ipairs(bodyParts) do
+                local part = character:FindFirstChild(partName)
+                if part then
+                    part.CanCollide = true  
+                end
+            end
+            collisionsDisabled = false
+        end
+    end
+end
+
+
+
+
+
+local function huntLoop()
+    huntBotRunning = true
+    while enabled do
+        local targetPlayer, distance = getClosestPlayer()
+        if targetPlayer then
+            local targetCharacter = targetPlayer.Character  
+            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                local targetPosition = targetCharacter.HumanoidRootPart.Position
+                
+                character2 = localPlayer2.Character or localPlayer2.CharacterAdded:Wait()
+                hrp2 = character2:WaitForChild("HumanoidRootPart")
+                toggleCollisions(true)
+
+                if distance > 5 then
+                    local direction = (targetPosition - hrp2.Position).Unit
+                    local newPosition = hrp2.Position + direction * 1
+                    hrp2.CFrame = CFrame.new(newPosition)
+                else
+                    downplayer(targetPlayer)  
+                    task.wait(0.5)
+                end
+            end
+        end
+        task.wait(0) 
+    end
+    huntBotRunning = false  
+end
 
 BotSection:NewToggle("HuntBot", "hunts down players", function(state)
-    if state then
-        enabled = true
-        hasFired = false
+    enabled = state
+
+    if enabled then
+        float(state)
+        toggleCollisions(state)
+        if not huntBotRunning then
+            task.spawn(huntLoop)  
+        end
     else
-        enabled = false
+        float(state)
+        toggleCollisions(state)
+        huntBotRunning = false  
     end
 end)
+
+
 
 
 
