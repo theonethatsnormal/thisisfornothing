@@ -318,6 +318,25 @@ end)
 
 end)
 
+KillSection:NewButton("Click to copy name tool", "READ THE NAME!", function() 
+local Players = game.Players
+local localplayer = Players.LocalPlayer
+local mouse = localplayer:GetMouse()
+
+local function onMouseClick()
+    local target = mouse.target
+    if target then
+        local character = target:FindFirstAncestorOfClass("Model")
+        if character and Players:GetPlayerFromCharacter(character) then
+            local clickedPlayer = Players:GetPlayerFromCharacter(character)
+            setclipboard(clickedPlayer.Name)
+            print(clickedPlayer.Name)
+        end
+    end
+end
+
+mouse.Button1Down:Connect(onMouseClick)
+end)
 local CharTab = Window:NewTab("Character")
 local CharSection = CharTab:NewSection("Character")
 
