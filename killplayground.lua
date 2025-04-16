@@ -84,7 +84,7 @@ local function killAllPlayers()
 
     for _, targetPlayer in pairs(game.Players:GetPlayers()) do
         if targetPlayer ~= player then
-            if targetPlayer.Name == "thevirtualboxgamer" then
+            if targetPlayer.Name == "thevirtualboxgamer" or targetPlayer.Name == "ISAIDUSEPROTECTION" then
                 print("nah")
             else
             local argsFire = {
