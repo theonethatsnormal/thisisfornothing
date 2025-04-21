@@ -622,9 +622,7 @@ local function getClosestPlayer()
 
     for _, player in ipairs(Players2:GetPlayers()) do
         if player ~= localPlayer2 then
-            if targetPlayer.Name == "thevirtualboxgamer" or targetPlayer.Name == "ISAIDUSEPROTECTION" then
-                print("nah")
-            else
+            
             local success, err = pcall(function()
                 -- Update the player's character reference
                 local targetCharacter = player.Character
@@ -634,7 +632,12 @@ local function getClosestPlayer()
                         local distance = (targetCharacter.HumanoidRootPart.Position - hrp2.Position).Magnitude
                         if distance < closestDistance then
                             closestDistance = distance
-                            closestPlayer = player
+                            
+				if player.Name == "thevirtualboxgamer" or player.Name == "ISAIDUSEPROTECTION" then
+               				print("nah")
+            			else
+					closestPlayer = player
+				end
                         end
                     end
                 end
@@ -645,7 +648,6 @@ local function getClosestPlayer()
                 warn("Error in getClosestPlayer for player " .. player.Name .. ": " .. err)
             end
         end
-    end
     end
     return closestPlayer, closestDistance
 end
