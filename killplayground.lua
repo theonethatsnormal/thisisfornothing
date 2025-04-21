@@ -617,7 +617,7 @@ local function downplayer(targetPlayer)
 end
 
 local function getClosestPlayer()
-    local closestPlayer = nil
+    local closestPlayer = "blo"
     local closestDistance = math.huge
 
     for _, player in ipairs(Players2:GetPlayers()) do
