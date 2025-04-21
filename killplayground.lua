@@ -337,6 +337,56 @@ end
 
 mouse.Button1Down:Connect(onMouseClick)
 end)
+
+local killauraEnabled = false
+
+
+KillSection:NewToggle("KillAura", "guess...", function(state)
+    killauraEnabled = state
+end)
+
+local plr = game.Players.LocalPlayer
+local rem = game.ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Swing")
+
+task.spawn(function()
+local player = game.Players.LocalPlayer
+local backpack = player.Backpack
+local tool = backpack:FindFirstChild("Combat")
+    while true do
+        
+        task.wait(0.25)
+
+        if not killauraEnabled then continue end
+        if tool then
+                    tool.Parent = player.Character
+        end
+        local char = plr.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+
+        for _, other in pairs(game.Players:GetPlayers()) do
+            
+            if other ~= plr and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (other.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if dist <= 30 then
+                    local targetHead = other.Character:FindFirstChild("Head")
+                    if targetHead then
+                        for i = 1, 20 do
+                            local args = {
+                                plr.Character:WaitForChild("Combat"),
+                                "Hit",
+                                targetHead
+                            }
+                            rem:FireServer(unpack(args))
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+
 local CharTab = Window:NewTab("Character")
 local CharSection = CharTab:NewSection("Character")
 
@@ -697,6 +747,8 @@ BotSection:NewToggle("HuntBot", "hunts down players", function(state)
         huntBotRunning = false  
     end
 end)
+
+
 
 
 
