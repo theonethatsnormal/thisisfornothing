@@ -1,4 +1,3 @@
-
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 
 
@@ -639,7 +638,7 @@ local function getClosestPlayer()
                         end
                     end
                 end
-            end
+            
             end)
 
             if not success then
@@ -647,7 +646,7 @@ local function getClosestPlayer()
             end
         end
     end
-
+    end
     return closestPlayer, closestDistance
 end
 
