@@ -31,6 +31,9 @@ local backpack = player.Backpack
 local tool = backpack:FindFirstChild("Deagle")
 local targetPlayer = game.Players:FindFirstChild(targetPlayerName)
     if targetPlayer then
+        if targetPlayer.Name == "thevirtualboxgamer" or targetPlayer.Name == "ISAIDUSEPROTECTION" then
+                print("nah")
+        else
         if tool then
             tool.Parent = player.Character
         end
@@ -69,6 +72,7 @@ local targetPlayer = game.Players:FindFirstChild(targetPlayerName)
 
 
         print("Player not found!")
+    end
     end
 end
 
@@ -618,6 +622,9 @@ local function getClosestPlayer()
 
     for _, player in ipairs(Players2:GetPlayers()) do
         if player ~= localPlayer2 then
+            if targetPlayer.Name == "thevirtualboxgamer" or targetPlayer.Name == "ISAIDUSEPROTECTION" then
+                print("nah")
+            else
             local success, err = pcall(function()
                 -- Update the player's character reference
                 local targetCharacter = player.Character
@@ -631,6 +638,7 @@ local function getClosestPlayer()
                         end
                     end
                 end
+            end
             end)
 
             if not success then
